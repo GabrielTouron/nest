@@ -1,0 +1,39 @@
+version: '3.8'
+services:
+  # Service NestJS
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '3000:3000'
+    # depends_on:
+    #   - postgres
+    # environment:
+    #   POSTGRES_HOST: postgres
+    #   POSTGRES_PORT: 5432
+    #   POSTGRES_USER: your_postgres_user
+    #   POSTGRES_PASSWORD: your_postgres_password
+    #   POSTGRES_DB: your_postgres_database
+    # networks:
+    #   - app-net
+
+    # Service PostgreSQL
+    #   postgres:
+    #     image: postgres:13
+    #     environment:
+    #       POSTGRES_USER: your_postgres_user
+    #       POSTGRES_PASSWORD: your_postgres_password
+    #       POSTGRES_DB: your_postgres_database
+    #     volumes:
+    #       - postgres-data:/var/lib/postgresql/data
+    #     ports:
+    #       - '5432:5432'
+    #     networks:
+    #       - app-net
+    #
+    # networks:
+    #   app-net:
+    #
+    # volumes:
+    #   postgres-data:
