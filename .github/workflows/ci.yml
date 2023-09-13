@@ -2,11 +2,11 @@ name: Build and Deploy to Cloud Run
 on: workflow_dispatch
 
 env:
-  PROJECT_ID: ${{ vars.PROJECT_ID }} # TODO: update Google Cloud project id
-  GAR_LOCATION: ${{ vars.GAR_LOCATION }} # TODO: update Artifact Registry location
-  REPOSITORY: ${{ vars.REPOSITORY }} # TODO: update Artifact Registry repository name
-  SERVICE: ${{ vars.SERVICE }} # TODO: update Cloud Run service name
-  REGION: ${{ vars.REGION }} # TODO: update Cloud Run service region
+  PROJECT_ID: ${{ vars.PROJECT_ID }} # Google Cloud project id
+  GAR_LOCATION: ${{ vars.GAR_LOCATION }} # Artifact Registry location
+  REPOSITORY: ${{ vars.REPOSITORY }} # Artifact Registry repository name
+  SERVICE: ${{ vars.SERVICE }} # Cloud Run service name
+  REGION: ${{ vars.REGION }} # Cloud Run service region
 
 jobs:
   deploy:
