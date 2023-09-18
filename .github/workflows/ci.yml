@@ -41,14 +41,28 @@ jobs:
           docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
 
       # https://github.com/google-github-actions/deploy-cloudrun#allowing-unauthenticated-requests
+      # - name: Deploy to Cloud Run
+      #   id: deploy
+      #   uses: google-github-actions/deploy-cloudrun@v0
+      #   with:
+      #     service: ${{ env.SERVICE }}
+      #
+      #     region: ${{ env.REGION }}
+      #     image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
+      #
+      # - name: Show Output
+      #   run: echo ${{ steps.deploy.outputs.url }}
+      #
+
       - name: Deploy to Cloud Run
-        id: deploy
-        uses: google-github-actions/deploy-cloudrun@v0
-        with:
-          service: ${{ env.SERVICE }}
-
-          region: ${{ env.REGION }}
-          image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
-
-      - name: Show Output
-        run: echo ${{ steps.deploy.outputs.url }}
+        run: |-
+          gcloud run deploy ${{ env.SERVICE }} \ 
+          --region=${{ env.GAR_LOCATION }} \
+          --image=${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }} \
+          --platform=managed \
+          # --service-account=${{ secrets.SERVICE_ACCOUNT }} \
+          # --set-secrets=DATABASE_URL=database-url:latest \
+          --max-instances=1 \
+          # --add-cloudsql-instances=${{ secrets.INSTANCE_CO }} \
+          --allow-unauthenticated \
+          --quiet
