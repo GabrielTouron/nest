@@ -1,0 +1,67 @@
+name: Build and Deploy to Cloud Run
+on:
+  push:
+    branches:
+      - preprod
+env:
+  PROJECT_ID: ${{ vars.PROJECT_ID }} # Google Cloud project id
+  GAR_LOCATION: ${{ vars.GAR_LOCATION }} # Artifact Registry location
+  REPOSITORY: ${{ vars.REPOSITORY }} # Artifact Registry repository name
+  SERVICE: ${{ vars.SERVICE }} # Cloud Run service name
+  REGION: ${{ vars.REGION }} # Cloud Run service region
+
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Google Auth
+        id: auth
+        uses: 'google-github-actions/auth@v0'
+        with:
+          token_format: 'access_token'
+          workload_identity_provider: '${{ secrets.WIF_PROVIDER }}' # e.g. - projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider
+          service_account: '${{ secrets.WIF_SERVICE_ACCOUNT }}' # e.g. - my-service-account@my-project.iam.gserviceaccount.com
+
+      - name: Docker Auth
+        id: docker-auth
+        uses: 'docker/login-action@v1'
+        with:
+          username: 'oauth2accesstoken'
+          password: '${{ steps.auth.outputs.access_token }}'
+          registry: '${{ env.GAR_LOCATION }}-docker.pkg.dev'
+
+      - name: Build and Push Container
+        run: |-
+          docker build -t "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" ./
+          docker push "${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}"
+
+      # https://github.com/google-github-actions/deploy-cloudrun#allowing-unauthenticated-requests
+      # - name: Deploy to Cloud Run
+      #   id: deploy
+      #   uses: google-github-actions/deploy-cloudrun@v0
+      #   with:
+      #     service: ${{ env.SERVICE }}
+      #
+      #     region: ${{ env.REGION }}
+      #     image: ${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
+      #
+      # - name: Show Output
+      #   run: echo ${{ steps.deploy.outputs.url }}
+      #
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy "preprod-${{ env.SERVICE }}" \
+          --region="${{ env.REGION }}" \
+          --image="${{ env.GAR_LOCATION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}" \
+          --platform=managed \
+          --max-instances=1 \
+          --allow-unauthenticated \
+          --quiet
